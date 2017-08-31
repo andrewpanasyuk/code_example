@@ -1,0 +1,96 @@
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="admin/mainTemplate">
+<head>
+  <object th:include="admin/fragments/head :: bootstrap_table" th:remove="tag"/>
+</head>
+<body>
+<section layout:fragment="content">
+  <div>
+    <ul class="nav nav-tabs" role="tablist">
+      <li th:each="queueByConsultancy,iterStat : ${queuesByConsultancy}" role="presentation" th:class="${iterStat.index == 0}? 'active' : ''">
+        <a th:href="'#tab-' + ${queueByConsultancy.key.id}" th:attr="aria-controls='tab-' + ${queueByConsultancy.key.id}" role="tab" data-toggle="tab">
+          <p th:text="${queueByConsultancy.key.name}"></p></a></li>
+    </ul>
+
+    <div class="tab-content">
+      <div th:each="queueByConsultancy,iterStat : ${queuesByConsultancy}" role="tabpanel" class="tab-pane"
+           th:classappend="${iterStat.index == 0} ? active : ''" th:id="'tab-' + ${queueByConsultancy.key.id}">
+        <table data-toggle="table" data-class="table table-striped table-hover" data-pagination="true"
+               data-side-pagination="client" data-search="true" data-show-refresh="true">
+          <thead>
+          <tr>
+            <th data-halign="center" data-align="center" class="col-xs-1">id</th>
+            <th data-halign="center" data-align="left">Consultancy</th>
+            <th data-halign="center" data-align="left">Client</th>
+            <th data-halign="center" data-align="left">Queuing Date</th>
+            <th data-halign="center" data-align="left">Priority</th>
+            <th data-halign="center" data-align="left">Action</th>
+          </tr>
+          </thead>
+          <tbody>
+          <!--/*@thymesVar id="queue" type="ua.com.foxminded.accountingsystem.model.DealQueue"*/-->
+          <tr th:each="queue : ${queueByConsultancy.value}">
+            <td th:text="${queue.id}"/>
+            <td th:text="${queue.deal.consultancy.name}"></td>
+            <td th:text="${queue.deal.client.firstName} + ' ' + ${queue.deal.client.lastName}"></td>
+            <td
+              th:text="${queue.queuingDate != null} ? ${#temporals.format(queue.queuingDate, 'dd-MMM-yyyy')} : ''"></td>
+            <td th:text="${queue.priority}"></td>
+            <td>
+              <form id="deleteQueue" class="form-horizontal" th:action="@{/admin/queues/{id}(id=${queue.id})}"
+                    th:method="delete"></form>
+              <a th:href="@{/admin/contracts/new?dealId={id}(id=${queue.deal.id})}"
+                 class="btn btn-primary">Contract</a>
+              <button class="btn btn-danger" type="button"
+                      th:onclick="'setIdQueueInModal(\'' + ${queue.id} + '\');'"
+                      data-toggle="modal" data-target="#removeDialog" id="removeButton">Remove
+              </button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="removeDialog" class="modal fade">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button class="close" type="button" data-dismiss="modal">×</button>
+          <h4 class="modal-title">Select delete type:</h4>
+        </div>
+        <div class="modal-body">
+          <form id="refuse" action="" th:method="delete">
+            <button type="delete" class="btn btn-warning btn-block" onclick="$('#link').submit()"> Refused
+            </button>
+          </form>
+          <form id="reject" action="" th:method="delete">
+            <button type="delete" class="btn btn-warning btn-block" onclick="$('#link').submit()"> Reject
+            </button>
+          </form>
+          <form id="delete" action="" th:method="delete">
+            <button type="delete" class="btn btn-danger btn-block" onclick="$('#link').submit()">Delete (silently)
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script type="text/javascript">
+    function setIdQueueInModal(queueId) {
+      var baseURL = "/admin/queues/";
+      var delURL = baseURL + queueId + "/" + "delete";
+      var refuseURL = baseURL + queueId + "/" + "REFUSED";
+      var rejectURL = baseURL + queueId + "/" + "REJECTED";
+      document.getElementById('delete').setAttribute('action', delURL);
+      document.getElementById('refuse').setAttribute('action', refuseURL);
+      document.getElementById('reject').setAttribute('action', rejectURL);
+    }
+  </script>
+
+</section>
+</body>
+</html>
